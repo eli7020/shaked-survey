@@ -118,6 +118,8 @@ footer{text-align:center;color:var(--muted);font-size:13px;letter-spacing:.06em;
 <script>
 const QUESTIONS = [
   {id:"name", type:"text-short", title:"שם העסק", required:true, placeholder:"שם העסק שלכם"},
+  {id:"biz", type:"single", title:"איך הייתם מגדירים את העסק שלכם?",
+   options:["קייטרינג","בית כנסת","מוסד","אחר"], other:"אחר"},
   {type:"section", title:"קודם כל, איך אנחנו?"},
   {id:"sat", type:"single", title:"באופן כללי, כמה אתם מרוצים מאיתנו?",
    options:["מרוצים מאוד","מרוצים","בסדר","לא כל כך","לא מרוצים"]},
@@ -242,9 +244,11 @@ form.addEventListener("submit", async e=>{
   const data=collect();
   if(!data.name){ setStatus("כתבו את שם העסק לפני השליחה.","err"); form.elements.name.focus(); return; }
   if(!SCRIPT_URL || SCRIPT_URL.indexOf("script.google.com")<0){ setStatus("הסקר עדיין לא מחובר לגיליון התשובות.","err"); return; }
+  const bizType = data.biz==="אחר" ? (data.biz_other||"אחר") : data.biz;
+  const payload = {...data, name: bizType ? `${data.name} (${bizType})` : data.name};
   const btn=document.getElementById("send"); btn.disabled=true; setStatus("שולח…");
   try{
-    await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data)});
+    await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
     try{ localStorage.setItem(DONE_KEY,"1"); }catch(_){}
     lockForm("תודה רבה! התשובות נשמרו.");
   }catch(err){
