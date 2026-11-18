@@ -94,6 +94,18 @@ footer{text-align:center;color:var(--muted);font-size:13px;letter-spacing:.06em;
 .empty{color:var(--muted);font-size:15px}
 @media (max-width:480px){.scale{grid-template-columns:minmax(0,1fr)}.bar{grid-template-columns:minmax(0,7em) minmax(0,1fr) 2.8em}.q{padding:16px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.thanks-overlay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(43,35,26,.45);padding:20px;animation:fadeIn .25s ease}
+.thanks-card{position:relative;z-index:2;background:var(--sheet);border-radius:22px;padding:36px 28px 28px;max-width:420px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(40,25,5,.35);display:flex;flex-direction:column;align-items:center;gap:10px;animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+.thanks-mark{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,var(--gold-hi),var(--gold) 60%,var(--gold-lo));box-shadow:0 8px 24px rgba(181,138,48,.35)}
+.thanks-card h2{font-family:var(--display);font-weight:900;font-size:34px;margin:6px 0 0;color:var(--heading)}
+.thanks-card p{margin:0;color:var(--muted);font-size:17px;max-width:30ch}
+.thanks-card .sig{font-family:var(--display);font-weight:700;color:var(--gold-lo);font-size:18px;margin-top:4px}
+.thanks-card button{margin-top:12px;font-size:18px;padding:10px 36px}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.thanks-overlay,.thanks-card{animation:none}}
 </style>
 
 <div class="wrap" dir="rtl" lang="he">
@@ -234,6 +246,35 @@ QUESTIONS.filter(q=>q.other).forEach(q=>{
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwkzrNhQvWN83E-Q5pi4hhMlacYyv_wS8NHQErpnU8K6QzEnO4cCDA56NSpgxUrTaJnw/exec";
 const DONE_KEY = "shaked-survey-done";
 let locked=false;
+function celebrate(){
+  const ov=document.createElement("div"); ov.className="thanks-overlay"; ov.setAttribute("role","dialog"); ov.setAttribute("aria-modal","true"); ov.setAttribute("aria-labelledby","thx-title");
+  ov.innerHTML=`<div class="thanks-card">
+    <div class="thanks-mark"><svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <h2 id="thx-title">תודה רבה!</h2>
+    <p>התשובות שלכם נשמרו בהצלחה.<br>הן יעזרו לנו לשרת אתכם טוב יותר.</p>
+    <div class="sig">צוות שקד</div>
+    <button type="button" id="thx-close">סגירה</button>
+  </div>`;
+  document.body.appendChild(ov);
+  const close=()=>{ ov.remove(); window.scrollTo({top:0,behavior:"smooth"}); };
+  ov.querySelector("#thx-close").addEventListener("click",close);
+  ov.addEventListener("click",e=>{ if(e.target===ov) close(); });
+  ov.querySelector("#thx-close").focus();
+  if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv=document.createElement("canvas"); cv.id="confetti"; document.body.appendChild(cv);
+  const ctx=cv.getContext("2d"); const dpr=window.devicePixelRatio||1;
+  const W=cv.width=innerWidth*dpr, H=cv.height=innerHeight*dpr;
+  const colors=["#D9B566","#B58A30","#F0D79A","#8A6620","#2B231A","#E8D3A0"];
+  const parts=Array.from({length:180},()=>({x:W/2+(Math.random()-.5)*W*.3,y:H*.45,vx:(Math.random()-.5)*16*dpr,vy:(-Math.random()*16-6)*dpr,
+    w:(6+Math.random()*6)*dpr,h:(10+Math.random()*8)*dpr,r:Math.random()*6,vr:(Math.random()-.5)*.3,c:colors[Math.floor(Math.random()*colors.length)]}));
+  const t0=performance.now();
+  (function tick(t){
+    ctx.clearRect(0,0,W,H);
+    parts.forEach(p=>{ p.vy+=.35*dpr; p.vx*=.99; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.fillStyle=p.c; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore(); });
+    if(t-t0<4000) requestAnimationFrame(tick); else cv.remove();
+  })(t0);
+}
 function lockForm(msg){
   locked=true;
   form.querySelectorAll("input,textarea,button").forEach(el=>el.disabled=true);
@@ -253,7 +294,7 @@ form.addEventListener("submit", async e=>{
     await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
     try{ localStorage.setItem(DONE_KEY,"1"); }catch(_){}
     lockForm("תודה רבה! התשובות נשמרו.");
-    window.scrollTo({top:0,behavior:"smooth"});
+    celebrate();
   }catch(err){
     setStatus("השליחה לא הצליחה. בדקו את החיבור לאינטרנט ונסו שוב.","err");
     btn.disabled=false;
