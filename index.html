@@ -238,6 +238,7 @@ function lockForm(msg){
   locked=true;
   form.querySelectorAll("input,textarea,button").forEach(el=>el.disabled=true);
   setStatus(msg,"ok");
+  showNotice(msg+" הטופס נעול, כי כל לקוח ממלא את הסקר פעם אחת.");
 }
 form.addEventListener("submit", async e=>{
   e.preventDefault();
@@ -252,6 +253,7 @@ form.addEventListener("submit", async e=>{
     await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
     try{ localStorage.setItem(DONE_KEY,"1"); }catch(_){}
     lockForm("תודה רבה! התשובות נשמרו.");
+    window.scrollTo({top:0,behavior:"smooth"});
   }catch(err){
     setStatus("השליחה לא הצליחה. בדקו את החיבור לאינטרנט ונסו שוב.","err");
     btn.disabled=false;
