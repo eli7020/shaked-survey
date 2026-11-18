@@ -8,7 +8,9 @@ function doPost(e) {
     const s = Array.isArray(v) ? v.join(', ') : String(v == null ? '' : v);
     return s.slice(0, 1500).replace(/^[=+\-@]/, "'$&");
   };
-  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  if (ss.getSpreadsheetTimeZone() !== 'Asia/Jerusalem') ss.setSpreadsheetTimeZone('Asia/Jerusalem');
+  const sheet = ss.getSheets()[0];
   if (sheet.getRange(1, 16).getValue() === '') sheet.getRange(1, 16).setValue('סוג העסק');
   const biz = d.biz === 'אחר' ? ('אחר: ' + (d.biz_other || '')) : d.biz;
   const name = String(d.name || '').replace(/\s*\([^)]*\)\s*$/, '');
