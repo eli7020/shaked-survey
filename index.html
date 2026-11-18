@@ -14,7 +14,7 @@
 /* Layout: Shaked bakery brand — black ground, gold wheat crest, one narrow column of numbered cards in two sections; owner results below */
 :root{
   color-scheme:light;
-  --bg:#FAF7F1; --surface:#FFFFFF; --raise:#F6F1E6; --ink:#2B231A; --muted:#7A6D5B; --line:#E7DDCB;
+  --bg:#F5EFE3; --surface:#FFFFFF; --raise:#F8F5EF; --sheet:#FFFFFF; --ink:#2B231A; --muted:#7A6D5B; --line:#E7DDCB;
   --gold:#B58A30; --gold-hi:#D9B566; --gold-lo:#8A6620; --gold-soft:#FBF3E0; --danger:#B3261E;
   --heading:#3A2A16;
   --leaf:var(--gold); --citrus:var(--gold-hi);
@@ -23,10 +23,11 @@
 }
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;
-  background-image:radial-gradient(ellipse 900px 420px at 50% -120px,rgba(217,181,102,.22),transparent 70%);
+  background-image:radial-gradient(ellipse 900px 420px at 50% -120px,rgba(217,181,102,.18),transparent 70%);
   background-repeat:no-repeat;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
-.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:22px;background:var(--sheet);border-radius:22px;padding:28px 28px 36px;box-shadow:0 12px 40px rgba(90,65,20,.12),0 1px 3px rgba(90,65,20,.06)}
+@media (max-width:520px){.wrap{padding:18px 14px 28px;border-radius:18px}}
 header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding-bottom:10px}
 .bsd{margin:4px 0 0;font-family:var(--display);font-weight:700;font-size:16px;color:var(--gold-lo)}
 .logo{width:100%;max-width:520px;height:auto;border-radius:16px;box-shadow:0 10px 30px rgba(60,40,10,.18)}
