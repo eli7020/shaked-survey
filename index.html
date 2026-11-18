@@ -106,6 +106,8 @@ footer{text-align:center;color:var(--muted);font-size:13px;letter-spacing:.06em;
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.thanks-overlay,.thanks-card{animation:none}}
+.q.missing{border-color:var(--danger);box-shadow:0 0 0 2px rgba(179,38,30,.15)}
+.q.missing h2::after{content:" · חובה";color:var(--danger);font-size:14px;font-weight:600}
 </style>
 
 <div class="wrap" dir="rtl" lang="he">
@@ -131,22 +133,22 @@ footer{text-align:center;color:var(--muted);font-size:13px;letter-spacing:.06em;
 <script>
 const QUESTIONS = [
   {id:"name", type:"text-short", title:"שם העסק", required:true, placeholder:"שם העסק שלכם"},
-  {id:"biz", type:"single", title:"איך הייתם מגדירים את העסק שלכם?",
+  {id:"biz", type:"single", title:"איך הייתם מגדירים את העסק שלכם?", required:true,
    options:["קייטרינג","בית כנסת","מוסד","אחר"], other:"אחר"},
   {type:"section", title:"קודם כל, איך אנחנו?"},
-  {id:"sat", type:"single", title:"באופן כללי, כמה אתם מרוצים מאיתנו?",
+  {id:"sat", type:"single", title:"באופן כללי, כמה אתם מרוצים מאיתנו?", required:true,
    options:["מרוצים מאוד","מרוצים","בסדר","לא כל כך","לא מרוצים"]},
-  {id:"good", type:"single", title:"ממה אתם הכי מרוצים?", hint:"בחרו דבר אחד",
+  {id:"good", type:"single", title:"ממה אתם הכי מרוצים?", required:true, hint:"בחרו דבר אחד",
    options:["מחיר","שירות","איכות","זמני אספקה","זמינות במלאי","מגוון","אחר"], other:"אחר"},
-  {id:"rate", type:"scale", title:"תנו ציון לכל תחום", hint:"1 = חלש, 5 = מצוין",
+  {id:"rate", type:"scale", title:"תנו ציון לכל תחום", required:true, hint:"1 = חלש, 5 = מצוין",
    items:["מחיר","שירות","איכות","זמני אספקה","מגוון"]},
-  {id:"value", type:"text-long", title:"איך הייתם מגדירים את הערך שאנחנו נותנים לכם?", placeholder:"במשפט או שניים, במילים שלכם"},
-  {id:"improve", type:"text-short", title:"דבר אחד שהיינו יכולים לעשות טוב יותר?", placeholder:"לא חובה"},
+  {id:"value", type:"text-long", title:"איך הייתם מגדירים את הערך שאנחנו נותנים לכם?", required:true, placeholder:"במשפט או שניים, במילים שלכם"},
+  {id:"improve", type:"text-short", title:"דבר אחד שהיינו יכולים לעשות טוב יותר?", required:true, placeholder:"מה היה עושה לכם את ההבדל?"},
   {type:"section", title:"ומה עוד תרצו לקבל מאיתנו?"},
   {id:"cats", type:"multi", title:"באילו תחומים הייתם רוצים שנרחיב את המבחר?", hint:"אפשר לבחור כמה",
    options:["שתייה","חד פעמי","חומרי גלם","חומרי ניקיון","קופסאות שומרים","קפואים"]},
   {id:"top", type:"text-short", title:"מוצר שהייתם רוצים שנוסיף?", placeholder:"לדוגמה: מגשי אלומיניום עם מכסה"},
-  {id:"notes", type:"text-long", title:"עוד משהו שתרצו להגיד לנו?", placeholder:"לא חובה"}
+  {id:"notes", type:"text-long", title:"עוד משהו שתרצו להגיד לנו?", required:true, placeholder:"כל מה שתרצו לשתף אותנו"}
 ];
 
 const form = document.getElementById("survey");
@@ -158,7 +160,7 @@ function buildForm(){
   QUESTIONS.forEach(q=>{
     if(q.type==="section"){ html += `<h2 class="section">${esc(q.title)}</h2>`; return; }
     const i=n++;
-    html += `<fieldset class="q" style="margin:0 0 16px"><div class="q-head"><span class="num">${i+1}</span><h2>${esc(q.title)}${q.required?' <span class="req" aria-label="חובה">*</span>':''}</h2></div>`;
+    html += `<fieldset class="q" id="q-${q.id}" style="margin:0 0 16px"><div class="q-head"><span class="num">${i+1}</span><h2>${esc(q.title)}${q.required?' <span class="req" aria-label="חובה">*</span>':''}</h2></div>`;
     if(q.hint) html += `<p class="hint">${esc(q.hint)}</p>`;
     if(q.type==="multi"||q.type==="single"){
       const t = q.type==="multi"?"checkbox":"radio";
@@ -239,6 +241,8 @@ function renderResults(docs){
 function syncOther(q){ const c=form.querySelector(`input[name="${q.id}"]:checked`); const box=form.elements[q.id+"_other"]; box.hidden=!(c&&c.value===q.other); }
 /* ---------- boot ---------- */
 buildForm();
+form.addEventListener("input",e=>{ const f=e.target.closest(".q.missing"); if(f) f.classList.remove("missing"); });
+form.addEventListener("change",e=>{ const f=e.target.closest(".q.missing"); if(f) f.classList.remove("missing"); });
 QUESTIONS.filter(q=>q.other).forEach(q=>{
   form.querySelectorAll(`input[name="${q.id}"]`).forEach(i=>i.addEventListener("change",()=>{ syncOther(q); if(i.checked&&i.value===q.other) form.elements[q.id+"_other"].focus(); }));
 });
@@ -285,7 +289,23 @@ form.addEventListener("submit", async e=>{
   e.preventDefault();
   if(locked) return;
   const data=collect();
-  if(!data.name){ setStatus("כתבו את שם העסק לפני השליחה.","err"); form.elements.name.focus(); return; }
+  form.querySelectorAll(".q.missing").forEach(f=>f.classList.remove("missing"));
+  const missing=QUESTIONS.filter(q=>{
+    if(!q.required) return false;
+    const v=data[q.id];
+    if(q.type==="scale") return q.items.some(it=>!v||!v[it]);
+    if(q.type==="multi") return !v.length;
+    if(!v) return true;
+    return q.other && v===q.other && !data[q.id+"_other"];
+  });
+  if(missing.length){
+    missing.forEach(q=>document.getElementById("q-"+q.id).classList.add("missing"));
+    const first=document.getElementById("q-"+missing[0].id);
+    first.scrollIntoView({behavior:"smooth",block:"center"});
+    const n=missing.length;
+    setStatus(n===1?"נשארה שאלת חובה אחת שלא ענית עליה. סימנו אותה באדום.":`נשארו ${n} שאלות חובה שלא ענית עליהן. סימנו אותן באדום.`,"err");
+    return;
+  }
   if(!SCRIPT_URL || SCRIPT_URL.indexOf("script.google.com")<0){ setStatus("הסקר עדיין לא מחובר לגיליון התשובות.","err"); return; }
   const bizType = data.biz==="אחר" ? (data.biz_other||"אחר") : data.biz;
   const payload = {...data, name: bizType ? `${data.name} (${bizType})` : data.name};
